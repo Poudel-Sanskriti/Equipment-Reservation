@@ -6,7 +6,7 @@ Thresholds: see `prompts/00_master_context.md` §6. 🟢 green · 🟡 yellow ·
 |---|---|---|---|---|---|---|---|---|
 | 01 | Project structure | Sanskriti | 2026-10-29 | 🟢 | n/a | NFR-05 | ✅ | Packages + .gitkeep |
 | 02 | Gradle build | Sanskriti | 2026-10-29 | 🟢 | 0/0 | NFR-09 (fatJar) | ✅ | Wrapper 8.14.3, Java 17, sqlite-jdbc 3.46.1.3, JUnit 5.10 |
-| 03 | MVC framework | Sanskriti | | | | | ⬜ | |
+| 03 | MVC framework | Sanskriti | 2026-10-29 | 🟢 | 6/6 | NFR-05, NFR-06 | ✅ | 8 classes adapted from calcProj; CopyOnWriteArrayList listeners; JFrameView refresh forced onto EDT and unregisters on dispose. 2 GUI tests skip when headless |
 | 04 ★ | Model skeleton | Sanskriti | | | | | ⬜ | |
 | 05 | Utilities | Sanskriti | | | | | ⬜ | |
 | 06 ★ | Database/transactions | Sanskriti | | | | | ⬜ | |

@@ -33,8 +33,8 @@
 - (Optional; needs a display, so skip it when `GraphicsEnvironment.isHeadless()`): JFrameView refresh runs on the EDT when fired from a background thread.
 
 ### Verification
-- [ ] `./gradlew build` passes and the tests are green
-- [ ] `model` imports nothing from `javax.swing` (`grep -r "javax.swing" src/main/java/equipmentReservation/model` → empty)
+- [x] `./gradlew build` passes and the tests are green (6/6)
+- [x] `model` imports nothing from `javax.swing` (`grep -r "javax.swing" src/main/java/equipmentReservation/model` → empty)
 
 ---
 **CRITICAL: These classes are the backbone of every view. Keep the John Hunt structure, use CopyOnWriteArrayList, and make JFrameView EDT-safe.**
