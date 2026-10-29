@@ -1,0 +1,14 @@
+@startuml statechart-reservation
+' Reservation lifecycle (FR-13, FR-15..FR-18, FR-25..FR-28)
+[*] --> Active : createReservation [valid period, item operational,\nnot under maintenance, not checked out,\nno overlap, < 3 active, <= 7 days]
+Active --> Cancelled : cancelReservation [requested by owner]
+Active --> Expired : expireOverdue [now >= min(end, start + pickupWindow)]
+Active --> CheckedOut : checkOut [admin, start <= now < pickupDeadline,\nitem operational, no open maintenance]
+CheckedOut --> Completed : returnItem(condition) [admin]
+CheckedOut : overdue when now > end (listed, never auto-closed)
+Cancelled --> [*]
+Expired --> [*]
+Completed --> [*]
+note right of Active : blocks availability
+note right of CheckedOut : blocks availability
+@enduml

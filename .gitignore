@@ -1,0 +1,33 @@
+# Gradle / build
+.gradle/
+build/
+out/
+bin/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Local database files (never commit real data)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local Claude settings
+.claude/settings.local.json
+
+# Course materials and personal notes: kept locally for the agent, NEVER uploaded
+ctxt/reference/
+ctxt/MVC_JohnHunt.md
+ctxt/Module_of_Thought_instr.md
+ctxt/promptGuidelines.md
+ctxt/PROJECT_REFERENCE.md

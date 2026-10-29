@@ -1,0 +1,159 @@
+@startuml class-diagram-initial
+' Initial (forward-engineered) class diagram, derived from prompts/00_master_context.md §3.
+' The FINAL diagram must be reverse-engineered from the code (increment 27).
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package equipmentReservation.model {
+  interface Model { +notifyChanged(e: ModelEvent) }
+  interface ModelListener { +modelChanged(e: ModelEvent) }
+  class ModelEvent { +ModelEvent(source: Object, what: String) }
+  abstract class AbstractModel {
+    -listeners: CopyOnWriteArrayList<ModelListener>
+    +notifyChanged(e: ModelEvent)
+    +addModelListener(l: ModelListener)
+    +removeModelListener(l: ModelListener)
+  }
+  Model <|.. AbstractModel
+  AbstractModel o--> "*" ModelListener
+
+  class ReservationSystem {
+    +ReservationSystem(db: Database, clock: Clock)
+    +now(): LocalDateTime
+    +fireChanged(what: String)
+    +shutdown()
+  }
+  AbstractModel <|-- ReservationSystem
+
+  class Session {
+    +signIn(username: String, password: char[]): User
+    +signOut()
+    +requireRole(role: Role): User
+  }
+  class EquipmentService {
+    +addEquipment(e: Equipment)
+    +updateEquipment(e: Equipment)
+    +listEquipment(): List<Equipment>
+    +returnToService(id: String, c: Condition)
+  }
+  class CatalogService { +search(name, category, start, end): List<CatalogEntry> }
+  class ReservationService {
+    +createReservation(equipmentId, start, end): Reservation
+    +cancelReservation(id: long)
+    +getMyHistory(): List<HistoryEntry>
+    +searchReservations(borrower, equipmentId, status): List<HistoryEntry>
+    +getActiveReservationsFor(equipmentId): List<Reservation>
+  }
+  class CheckoutService {
+    +checkOut(reservationId: long)
+    +returnItem(reservationId: long, c: Condition)
+    +listOverdue(): List<OverdueCheckout>
+  }
+  class MaintenanceService {
+    +openMaintenance(equipmentId, reason): MaintenanceRecord
+    +closeMaintenance(recordId: long)
+    +listOpen(): List<MaintenanceRecord>
+  }
+  class SettingsService {
+    +getPickupWindowMinutes(): int
+    +setPickupWindowMinutes(m: int)
+  }
+  class ExpirationService {
+    +expireOverdue(): int
+    +start()
+    +stop()
+  }
+  ReservationSystem *-- Session
+  ReservationSystem *-- EquipmentService
+  ReservationSystem *-- CatalogService
+  ReservationSystem *-- ReservationService
+  ReservationSystem *-- CheckoutService
+  ReservationSystem *-- MaintenanceService
+  ReservationSystem *-- SettingsService
+  ReservationSystem *-- ExpirationService
+  ReservationService ..> ExpirationService : expire first
+  CheckoutService ..> ExpirationService : expire first
+  CatalogService ..> ExpirationService : expire first
+
+  class User { -username: String\n-role: Role }
+  class Equipment { -id: String\n-name: String\n-category: String\n-description: String\n-condition: Condition\n-status: OperationalStatus }
+  class Reservation { -id: long\n-borrower: String\n-equipmentId: String\n-start: LocalDateTime\n-end: LocalDateTime\n-createdAt: LocalDateTime\n-status: ReservationStatus\n+pickupDeadline(window: int): LocalDateTime\n+overlaps(start, end): boolean }
+  class Checkout { -reservationId: long\n-checkoutTime\n-checkoutAdmin\n-returnTime\n-returnCondition\n+isOpen(): boolean }
+  class MaintenanceRecord { -id: long\n-equipmentId\n-reason\n-openedAt\n-closedAt\n+isOpen(): boolean }
+  User "1" -- "*" Reservation : borrows
+  Equipment "1" -- "*" Reservation
+  Reservation "1" -- "0..1" Checkout
+  Equipment "1" -- "*" MaintenanceRecord
+
+  enum Role { BORROWER\nADMINISTRATOR }
+  enum Condition { GOOD\nFAIR\nDAMAGED }
+  enum OperationalStatus { OPERATIONAL\nNON_OPERATIONAL }
+  enum ReservationStatus { ACTIVE\nCHECKED_OUT\nCOMPLETED\nCANCELLED\nEXPIRED }
+  enum Availability { AVAILABLE\nRESERVED\nCHECKED_OUT\nUNDER_MAINTENANCE\nNON_OPERATIONAL }
+
+  class ReservationSystemException
+  Exception <|-- ReservationSystemException
+  ReservationSystemException <|-- ValidationException
+  ReservationSystemException <|-- AuthenticationException
+  ReservationSystemException <|-- AuthorizationException
+  ReservationSystemException <|-- ConflictException
+  ReservationSystemException <|-- InvalidOperationException
+  ReservationSystemException <|-- NotFoundException
+}
+
+package equipmentReservation.model.persistence {
+  class Database {
+    +inTransaction(work: TxWork<T>): T
+    +read(work: TxWork<T>): T
+    +close()
+  }
+  interface TxWork<T> { +run(c: Connection): T }
+  class ReservationRepository
+  class EquipmentRepository
+  class CheckoutRepository
+  class MaintenanceRepository
+  class UserRepository
+  class SettingsRepository
+  class DataSeeder
+}
+ReservationSystem --> Database
+
+package equipmentReservation.controller {
+  interface Controller
+  abstract class AbstractController { +operation(command: String) }
+  Controller <|.. AbstractController
+  AbstractController <|-- LoginController
+  AbstractController <|-- CatalogController
+  AbstractController <|-- ReservationFormController
+  AbstractController <|-- MyReservationsController
+  AbstractController <|-- AdminHomeController
+  AbstractController <|-- EquipmentManagementController
+  AbstractController <|-- SettingsController
+  AbstractController <|-- CheckoutReturnController
+  AbstractController <|-- MaintenanceController
+}
+
+package equipmentReservation.view {
+  interface View
+  abstract class JFrameView {
+    +modelChanged(e: ModelEvent)
+    #refresh(e: ModelEvent)
+    +showError(msg: String)
+  }
+  View <|.. JFrameView
+  ModelListener <|.. JFrameView
+  JFrameView <|-- LoginView
+  JFrameView <|-- CatalogView
+  JFrameView <|-- ReservationFormView
+  JFrameView <|-- MyReservationsView
+  JFrameView <|-- AdminHomeView
+  JFrameView <|-- EquipmentManagementView
+  JFrameView <|-- SettingsView
+  JFrameView <|-- CheckoutReturnView
+  JFrameView <|-- MaintenanceView
+}
+AbstractController --> ReservationSystem : model
+AbstractController --> JFrameView : view
+JFrameView --> ReservationSystem : observes
+@enduml
