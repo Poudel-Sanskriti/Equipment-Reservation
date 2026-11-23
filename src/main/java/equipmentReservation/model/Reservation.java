@@ -55,6 +55,29 @@ public class Reservation extends AbstractModel {
     }
 
     /**
+     * Rebuilds a reservation that was saved earlier, keeping its saved status.
+     * For loading saved reservations only; new reservations must use the
+     * constructor so they start as {@link ReservationStatus#ACTIVE} (FR-13).
+     *
+     * @param id        unique id; not blank
+     * @param borrower  the borrower; not null
+     * @param item      the reserved item; not null
+     * @param start     start of the period; not null
+     * @param end       end of the period; must be after {@code start}
+     * @param createdAt creation time; not null
+     * @param status    the saved status; not null
+     * @return the rebuilt reservation
+     * @throws ValidationException if an argument is missing or {@code end} is not after {@code start}
+     */
+    public static Reservation restore(String id, User borrower, Equipment item, LocalDateTime start,
+                                      LocalDateTime end, LocalDateTime createdAt,
+                                      ReservationStatus status) throws ValidationException {
+        Reservation r = new Reservation(id, borrower, item, start, end, createdAt);
+        r.status = Checks.requireValue(status, "Status");
+        return r;
+    }
+
+    /**
      * Returns the unique id.
      *
      * @return the id
