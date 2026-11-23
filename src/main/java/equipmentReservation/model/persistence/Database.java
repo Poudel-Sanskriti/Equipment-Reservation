@@ -131,4 +131,28 @@ public class Database {
             }
         }
     }
+
+    /**
+     * Runs {@code work} in one transaction (FR-37). Commits if the work
+     * finishes; if it throws anything, rolls back so no partial change is
+     * saved, then rethrows the same exception unchanged.
+     *
+     * @param <E>  the checked exception the work may throw
+     * @param work the work to run
+     * @throws SQLException if a database operation fails
+     * @throws E            if the work throws it; the transaction is rolled back first
+     */
+    public <E extends Exception> void inTransaction(TransactionWork<E> work) throws SQLException, E {
+        Objects.requireNonNull(work, "work");
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                work.run(conn);
+                conn.commit();
+            } catch (Exception | Error e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
 }
